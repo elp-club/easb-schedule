@@ -90,16 +90,20 @@
           let [tournament, rawDate, home, away, match, round, link] = row.c.map(c => c?.v || "");
 
           let date = rawDate;
-          if (typeof rawDate === 'string' && rawDate.startsWith("Date")) {
-            const parts = rawDate.match(/\d+/g);
-            if (parts) {
-              const [y, m, d] = parts.map(Number);
-              const dateObj = new Date(y, m, d);
-              date = dateObj.toLocaleDateString("en-GB", {
-                weekday: "short",
-                year: "numeric",
-                month: "short",
-                day: "numeric"
+
+          // Correctly parse raw date string like "Date(2025,4,20)"
+          if (typeof rawDate === 'string' && rawDate.startsWith('Date')) {
+            const matchDate = rawDate.match(/Date\((\d+),(\d+),(\d+)\)/);
+            if (matchDate) {
+              const year = parseInt(matchDate[1]);
+              const month = parseInt(matchDate[2]);
+              const day = parseInt(matchDate[3]);
+              const dateObj = new Date(year, month, day);
+              date = dateObj.toLocaleDateString('en-GB', {
+                weekday: 'short',
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
               });
             }
           }
