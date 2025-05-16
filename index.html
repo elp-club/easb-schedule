@@ -87,7 +87,22 @@
         const clubSet = new Set();
 
         rows.forEach(row => {
-          const [tournament, date, home, away, match, round, link] = row.c.map(c => c?.v || "");
+          let [tournament, rawDate, home, away, match, round, link] = row.c.map(c => c?.v || "");
+
+          let date = rawDate;
+          if (typeof rawDate === 'string' && rawDate.startsWith("Date")) {
+            const parts = rawDate.match(/\d+/g);
+            if (parts) {
+              const [y, m, d] = parts.map(Number);
+              const dateObj = new Date(y, m, d);
+              date = dateObj.toLocaleDateString("en-GB", {
+                weekday: "short",
+                year: "numeric",
+                month: "short",
+                day: "numeric"
+              });
+            }
+          }
 
           const tr = document.createElement("tr");
           tr.innerHTML = `
