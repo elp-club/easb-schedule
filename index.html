@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Upcoming Match Schedule</title>
+  <style>
+    body {
+      background: #111;
+      color: #fff;
+      font-family: 'Arial', sans-serif;
+      text-align: center;
+    }
+    h1 {
+      color: limegreen;
+      text-shadow: 0 0 5px green;
+    }
+    .warning {
+      color: red;
+      font-weight: bold;
+    }
+    table {
+      margin: 20px auto;
+      border-collapse: collapse;
+      width: 90%;
+    }
+    th, td {
+      padding: 12px;
+      border: 1px solid #444;
+    }
+    th {
+      background: #00c853;
+    }
+    td {
+      background: #222;
+    }
+    select, button {
+      padding: 10px;
+      margin: 10px;
+      font-size: 16px;
+    }
+    .btn-join {
+      background-color: #00c853;
+      color: black;
+      padding: 5px 15px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .btn-join:hover {
+      background-color: #00e676;
+    }
+  </style>
+</head>
+<body>
+  <h1>Upcoming Match Schedule ~ EASB</h1>
+  <p class="warning">WARNING: The admin panel reserves the right to revise the schedule changes at any time and all teams will be bound to start and finish the matches in the changed schedule. Thank you!</p>
+
+  <select id="clubFilter">
+    <option value="All">All Clubs</option>
+  </select>
+  <button onclick="resetFilters()">Reset Filters</button>
+
+  <table id="scheduleTable">
+    <thead>
+      <tr>
+        <th>TOURNAMENT</th>
+        <th>DATE</th>
+        <th>HOME TEAM</th>
+        <th>AWAY TEAM</th>
+        <th>MATCH #</th>
+        <th>ROUND</th>
+        <th>LINK</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const sheetURL = 'https://docs.google.com/spreadsheets/d/1qpAN2eHUEAw0aZbqz9imoRa0Bso1UK6-CBpmijeR8qg/gviz/tq?tqx=out:json';
+
+    fetch(sheetURL)
+      .then(res => res.text())
+      .then(data => {
+        const jsonData = JSON.parse(data.substr(47).slice(0, -2));
+        const rows = jsonData.table.rows;
+        const tbody = document.querySelector("#scheduleTable tbody");
+        const clubSet = new Set();
+
+        rows.forEach(row => {
+          const [tournament, date, home, away, match, round, link] = row.c.map(c => c?.v || "");
+
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${tournament}</td>
+            <td>${date}</td>
+            <td>${home}</td>
+            <td>${away}</td>
+            <td>${match}</td>
+            <td>${round}</td>
+            <td><button class="btn-join" onclick="window.open('${link}', '_blank')">Join</button></td>
+          `;
+          tbody.appendChild(tr);
+
+          clubSet.add(home);
+          clubSet.add(away);
+        });
+
+        const filter = document.getElementById("clubFilter");
+        [...clubSet].sort().forEach(club => {
+          const opt = document.createElement("option");
+          opt.value = club;
+          opt.textContent = club;
+          filter.appendChild(opt);
+        });
+
+        filter.addEventListener("change", () => {
+          const selected = filter.value;
+          Array.from(tbody.rows).forEach(row => {
+            const home = row.cells[2].textContent;
+            const away = row.cells[3].textContent;
+            row.style.display = selected === "All" || home === selected || away === selected ? "" : "none";
+          });
+        });
+      });
+
+    function resetFilters() {
+      document.getElementById("clubFilter").value = "All";
+      Array.from(document.querySelector("#scheduleTable tbody").rows).forEach(row => {
+        row.style.display = "";
+      });
+    }
+  </script>
+</body>
+</html>
